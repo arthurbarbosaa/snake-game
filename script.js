@@ -1,6 +1,7 @@
 const canvas = document.querySelector("canvas") // link do canvas do html com o js
 const context = canvas.getContext("2d") // link do contexto do canvas
 
+const audio = new Audio("assets/audio.mp3")
 const size = 30
 // é importante variar as posicoes der 30 em 30 pois a cobra tem o tamanho 30
 
@@ -8,14 +9,19 @@ const snake = [
     {x: 300, y: 300},
     {x: 330, y: 300},
 ]
-const food = {
-    x: 30,
-    y: 30,
-    color: "red"
+
+const randomNumber = (min, max) => {
+    return Math.round(Math.random() * (max - min) + min)
 }
 
-const randomNumber = () => {
-    return Math.round(Math.random())
+const randomPosition = () => {
+    const number = randomNumber(0, canvas.width - size)
+    return Math.round(number / 30) * 30 //tranformando o numero em um multiplo de 30
+}
+const food = {
+    x: randomPosition(),
+    y: randomPosition(),
+    color: "red"
 }
 
 let direction = ""
@@ -79,6 +85,38 @@ const drawGrid = () => {
 
 }
 
+const checkEat = () => {
+    const head = snake[snake.length - 1]
+
+    if(head.x == food.x && head.y == food.y) {
+        snake.push(head)
+        audio.play()
+
+        let x = randomPosition()
+        let y = randomPosition()
+
+        //garantir que gere comidas fora da cobrinha
+        while(snake.find((position) => position.x == x && position.y == y)){
+            x = randomPosition()
+            y = randomPosition()
+        }
+
+        food.x = x
+        food.y = y
+    }
+}
+
+const checkColision = () => {
+    const head = snake[snake.length - 1]
+    const canvasLimit = canvas.width - size
+
+    const wallColision = head.x < 0 || head.x > canvasLimit || head.y < 0 || head.y > canvasLimit
+
+    if(wallColision){
+        alert("perdeu")
+    }
+}
+
 const gameLoop = () => {
     clearInterval(loopId) //limpar o setTimeout antes de usar novamente
     context.clearRect(0, 0, 600, 600)
@@ -86,6 +124,8 @@ const gameLoop = () => {
     drawFood()
     moveSnake()
     drawSnake()
+    checkEat()
+    checkColision()
 
     // apos 300ms chamar a funcao gameLoop novamente
     setTimeout(() => {
